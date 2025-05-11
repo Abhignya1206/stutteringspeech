@@ -3,7 +3,8 @@ import librosa
 import numpy as np
 import tensorflow as tf
 import os
-from utils.audio_utils import extract_mfcc
+from audio_utils import extract_mfcc
+
 
 app = Flask(__name__)
 model = tf.keras.models.load_model("model/your_model.h5")
