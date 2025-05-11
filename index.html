@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Stuttering Speech Recognition</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <h1>Stuttering Speech Recognition</h1>
+    <form id="uploadForm" enctype="multipart/form-data">
+        <input type="file" name="audio_file" accept=".wav" required>
+        <button type="submit">Detect Stutter</button>
+    </form>
+    <div id="result"></div>
+
+    <script>
+        document.getElementById('uploadForm').onsubmit = async function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+
+            const res = await fetch('/predict', {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await res.json();
+            document.getElementById('result').innerText = `Result: ${data.result} (Confidence: ${data.confidence.toFixed(2)})`;
+        }
+    </script>
+</body>
+</html>
