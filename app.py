@@ -1,13 +1,15 @@
-from flask import Flask, render_template, request, jsonify
-import librosa
+from flask import Flask, request, render_template
 import numpy as np
+import librosa
 import tensorflow as tf
 import os
-from audio_utils import extract_mfcc
 
+from utils.audio_utils import extract_mfcc
 
 app = Flask(__name__)
-model = tf.keras.models.load_model("model/your_model.h5")
+
+from tensorflow.keras.models import load_model
+model = load_model('model/model.h5')
 
 @app.route('/')
 def index():
@@ -15,21 +17,24 @@ def index():
 
 @app.route('/predict', methods=['POST'])
 def predict():
-    if 'audio_file' not in request.files:
-        return jsonify({'error': 'No audio file uploaded'}), 400
+    if 'file' not in request.files:
+        return "No file uploaded", 400
 
-    file = request.files['audio_file']
+    file = request.files['file']
+    if file.filename == '':
+        return "No file selected", 400
+
     y, sr = librosa.load(file, sr=None)
-    features = extract_mfcc(y, sr)
-    features = features.reshape(1, -1, 1)
+    mfccs = extract_mfcc(y, sr)
+    mfccs = np.expand_dims(mfccs, axis=0)
 
-    prediction = model.predict(features)
-    result = "Stutter Detected" if prediction[0][0] > 0.5 else "Fluent Speech"
+    prediction = model.predict(mfccs)
+    predicted_label = np.argmax(prediction, axis=1)[0]
 
-    return jsonify({'result': result, 'confidence': float(prediction[0][0])})
+    return f'Predicted Label: {predicted_label}'
 
-if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))  # Default to 5000 for local dev
+if __name__ == "__main__":
+    port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port)
 
 
